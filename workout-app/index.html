@@ -4,6 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0f172a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="筋トレ記録">
   <title>筋トレ記録</title>
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
@@ -12,105 +14,219 @@
 </head>
 <body>
   <header class="topbar">
-    <h1 id="view-title">今日のトレーニング</h1>
+    <button id="back-btn" class="back-btn" hidden aria-label="カレンダーに戻る">‹ カレンダー</button>
+    <h1 id="view-title">筋トレ記録</h1>
   </header>
 
   <main>
-    <!-- 記録 -->
-    <section id="view-today" class="view active">
-      <div class="card">
-        <label class="field">
-          <span>日付</span>
-          <input type="date" id="workout-date">
-        </label>
-        <div class="row">
-          <input list="exercise-list" id="exercise-input" placeholder="種目名（例：ベンチプレス）" autocomplete="off">
-          <button id="add-exercise" class="btn primary">追加</button>
+    <!-- ホーム：カレンダー -->
+    <section id="view-home" class="view active">
+      <div class="hero">
+        <p id="home-hero-big" class="hero-big"></p>
+        <p id="home-hero-small" class="hero-small"></p>
+        <div class="hero-stats">
+          <div><span>直近7日</span><strong id="home-week">-</strong></div>
+          <div><span>今月</span><strong id="home-month">-</strong></div>
+          <div><span>累計</span><strong id="home-total">-</strong></div>
         </div>
-        <datalist id="exercise-list"></datalist>
       </div>
 
-      <div id="today-entries"></div>
-      <p id="today-empty" class="empty">種目を追加して記録を始めましょう 💪</p>
+      <div class="card calendar">
+        <div class="cal-head">
+          <button id="cal-prev" class="btn ghost" aria-label="前の月">‹</button>
+          <h2 id="cal-title"></h2>
+          <button id="cal-next" class="btn ghost" aria-label="次の月">›</button>
+        </div>
+        <div id="cal-grid" class="cal-grid"></div>
+        <div id="legend" class="legend"></div>
+      </div>
+
+      <button id="cal-today" class="btn primary big">💪 今日のトレーニングを記録する</button>
     </section>
 
-    <!-- 履歴 -->
-    <section id="view-history" class="view">
-      <div id="history-list"></div>
-      <p id="history-empty" class="empty">まだ記録がありません</p>
+    <!-- 1日の画面 -->
+    <section id="view-day" class="view">
+      <div id="day-banner" class="day-banner"></div>
+      <div class="seg">
+        <button class="seg-btn active" data-seg="train">💪 トレーニング</button>
+        <button class="seg-btn" data-seg="memo">📝 メモ・カロリー</button>
+      </div>
+
+      <div id="day-train">
+        <h2 class="section-title">部位を選ぶ</h2>
+        <div id="part-grid" class="part-grid"></div>
+        <h2 class="section-title">記録</h2>
+        <div id="entries"></div>
+        <p id="entries-empty" class="empty">上の部位をタップして種目を追加しよう！</p>
+      </div>
+
+      <div id="day-memo" hidden>
+        <div class="card">
+          <h2 class="card-title">⚡ 消費カロリー・代謝</h2>
+          <div id="energy"></div>
+        </div>
+
+        <div class="card">
+          <h2 class="card-title">⚖️ 体重</h2>
+          <label class="field inline"><input type="number" id="memo-weight" inputmode="decimal" step="0.1" min="0" placeholder="例：65.0"><span>kg</span></label>
+        </div>
+
+        <div class="card">
+          <h2 class="card-title">😴 睡眠</h2>
+          <div class="row two">
+            <label class="field"><span>寝た時刻</span><input type="time" id="memo-bed"></label>
+            <label class="field"><span>起きた時刻</span><input type="time" id="memo-wake"></label>
+          </div>
+          <p id="sleep-result" class="result"></p>
+        </div>
+
+        <div class="card">
+          <h2 class="card-title">🍚 食事</h2>
+          <div id="meal-list"></div>
+          <p class="note small">kcalがわからなければ空欄でOK（メモだけでも十分えらい！）</p>
+        </div>
+
+        <div class="card">
+          <h2 class="card-title">🚶 今日の活動</h2>
+          <div id="activity-list"></div>
+          <div class="row act-add">
+            <select id="activity-type" aria-label="活動の種類"></select>
+            <input type="number" id="activity-min" inputmode="numeric" min="1" placeholder="分" aria-label="時間（分）">
+            <button id="activity-add" class="btn primary">追加</button>
+          </div>
+          <label class="field inline top-gap"><span>筋トレ時間</span><input type="number" id="memo-training-min" inputmode="numeric" min="0" placeholder="自動"><span>分</span></label>
+          <p id="training-min-auto" class="note small"></p>
+        </div>
+
+        <div class="card">
+          <h2 class="card-title">✏️ ひとことメモ</h2>
+          <textarea id="memo-note" rows="3" placeholder="体調・気分・できたことなど"></textarea>
+        </div>
+      </div>
     </section>
 
     <!-- 分析 -->
     <section id="view-stats" class="view">
-      <div class="card">
-        <label class="field">
-          <span>種目</span>
-          <select id="stats-exercise"></select>
-        </label>
-        <div class="stat-grid">
-          <div class="stat"><span class="stat-label">最大重量</span><span id="stat-max" class="stat-value">-</span></div>
-          <div class="stat"><span class="stat-label">推定1RM</span><span id="stat-1rm" class="stat-value">-</span></div>
-          <div class="stat"><span class="stat-label">実施回数</span><span id="stat-sessions" class="stat-value">-</span></div>
-          <div class="stat"><span class="stat-label">総ボリューム</span><span id="stat-volume" class="stat-value">-</span></div>
-        </div>
+      <div class="seg">
+        <button class="seg-btn period-btn active" data-days="7">週（直近7日）</button>
+        <button class="seg-btn period-btn" data-days="30">月（直近30日）</button>
       </div>
-      <div class="card">
-        <h2 class="card-title">推定1RMの推移</h2>
-        <canvas id="stats-chart" height="220"></canvas>
-        <p id="chart-empty" class="empty small">データが2日分以上になるとグラフが表示されます</p>
+      <p id="st-range" class="note center"></p>
+      <div class="stat-grid">
+        <div class="stat"><span class="stat-label">トレーニング日数</span><span id="st-days" class="stat-value">-</span></div>
+        <div class="stat"><span class="stat-label">総セット数</span><span id="st-sets" class="stat-value">-</span></div>
+        <div class="stat"><span class="stat-label">平均睡眠</span><span id="st-sleep" class="stat-value">-</span></div>
+        <div class="stat"><span class="stat-label">平均消費カロリー</span><span id="st-energy" class="stat-value">-</span></div>
       </div>
+
       <div class="card">
-        <h2 class="card-title">直近7日間</h2>
-        <div class="stat-grid">
-          <div class="stat"><span class="stat-label">トレーニング日数</span><span id="week-days" class="stat-value">-</span></div>
-          <div class="stat"><span class="stat-label">総セット数</span><span id="week-sets" class="stat-value">-</span></div>
-        </div>
+        <h2 class="card-title">🧑‍🏫 コーチからのアドバイス</h2>
+        <ul id="advice" class="advice-list"></ul>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">部位ごとのセット数</h2>
+        <p class="note small">縦線は目安（週あたり：胸・背中・脚 10、肩・腕 8、腹 6セット）</p>
+        <div id="part-bars"></div>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">種目ごとの成長（推定1RM）</h2>
+        <select id="st-exercise" aria-label="種目"></select>
+        <p id="st-best" class="result"></p>
+        <div id="chart-1rm" class="chart-box"></div>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">体重の推移</h2>
+        <div id="chart-weight" class="chart-box"></div>
       </div>
     </section>
 
-    <!-- 設定 -->
-    <section id="view-settings" class="view">
+    <!-- マイページ -->
+    <section id="view-me" class="view">
+      <p id="me-hello" class="hello"></p>
+      <form id="profile-form" class="card" onsubmit="return false">
+        <h2 class="card-title">👤 プロフィール</h2>
+        <label class="field"><span>ニックネーム</span><input id="pf-name" placeholder="例：たろう" autocomplete="nickname"></label>
+        <div class="row two">
+          <label class="field"><span>性別</span>
+            <select id="pf-sex"><option value="">選択</option><option value="male">男性</option><option value="female">女性</option><option value="other">その他・回答しない</option></select>
+          </label>
+          <label class="field"><span>年齢</span><input type="number" id="pf-age" inputmode="numeric" min="10" max="100" placeholder="歳"></label>
+        </div>
+        <div class="row two">
+          <label class="field"><span>身長 (cm)</span><input type="number" id="pf-height" inputmode="decimal" step="0.1" placeholder="例：170"></label>
+          <label class="field"><span>体重 (kg)</span><input type="number" id="pf-weight" inputmode="decimal" step="0.1" placeholder="例：65"></label>
+        </div>
+        <label class="field"><span>目標</span>
+          <select id="pf-goal"><option value="keep">健康維持</option><option value="bulk">筋肉を増やしたい</option><option value="diet">ダイエットしたい</option></select>
+        </label>
+        <p class="note small">日々の体重は「メモ・カロリー」で記録すると、計算に自動で反映されます。</p>
+      </form>
+
       <div class="card">
-        <h2 class="card-title">レストタイマー</h2>
-        <label class="field">
-          <span>デフォルト秒数</span>
-          <input type="number" id="rest-default" min="10" max="600" step="10">
-        </label>
-        <label class="field checkbox">
-          <input type="checkbox" id="rest-auto">
-          <span>セット完了時に自動でタイマー開始</span>
-        </label>
+        <h2 class="card-title">📊 あなたの数値</h2>
+        <div id="me-computed" class="stat-grid"></div>
       </div>
+
       <div class="card">
-        <h2 class="card-title">データ</h2>
-        <p class="note">データはこの端末のブラウザ内にだけ保存されます。機種変更前などにはバックアップしてください。</p>
+        <h2 class="card-title">⏱ レストタイマー</h2>
+        <label class="field inline"><span>休憩時間</span><input type="number" id="rest-default" min="10" max="600" step="10"><span>秒</span></label>
+        <label class="field checkbox"><input type="checkbox" id="rest-auto"><span>セット完了で自動スタート</span></label>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">💾 データ</h2>
+        <p class="note">データはこのスマホの中だけに保存されます。機種変更前にはバックアップを保存してください。</p>
         <div class="row wrap">
           <button id="export-data" class="btn">バックアップを保存</button>
-          <label class="btn">
-            バックアップを読み込む
-            <input type="file" id="import-data" accept="application/json" hidden>
-          </label>
+          <label class="btn">バックアップを読み込む<input type="file" id="import-data" accept="application/json" hidden></label>
           <button id="clear-data" class="btn danger">全データ削除</button>
         </div>
       </div>
     </section>
   </main>
 
+  <!-- ボトムシート -->
+  <div id="sheet" class="sheet">
+    <div id="sheet-backdrop" class="sheet-backdrop"></div>
+    <div class="sheet-panel" role="dialog" aria-modal="true">
+      <button id="sheet-close" class="sheet-close" aria-label="閉じる">✕</button>
+      <div id="sheet-body"></div>
+    </div>
+  </div>
+
+  <!-- お祝い -->
+  <div id="celebrate" class="celebrate" role="status">
+    <div id="confetti" class="confetti"></div>
+    <div class="celebrate-box">
+      <div id="celebrate-emoji" class="celebrate-emoji"></div>
+      <p id="celebrate-title" class="celebrate-title"></p>
+      <p id="celebrate-sub" class="celebrate-sub"></p>
+      <span class="note small">タップで閉じる</span>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status"></div>
+
   <!-- レストタイマー -->
   <div id="timer" class="timer hidden">
+    <span id="timer-label" class="timer-label">休憩</span>
     <button id="timer-minus" class="btn small">-15</button>
     <span id="timer-display">1:30</span>
     <button id="timer-plus" class="btn small">+15</button>
-    <button id="timer-stop" class="btn small">停止</button>
+    <button id="timer-stop" class="btn small">✕</button>
   </div>
 
   <nav class="tabbar">
-    <button data-view="today" class="tab active"><span>🏋️</span>記録</button>
-    <button data-view="history" class="tab"><span>📅</span>履歴</button>
+    <button data-view="home" class="tab active"><span>📅</span>ホーム</button>
     <button data-view="stats" class="tab"><span>📈</span>分析</button>
-    <button data-view="settings" class="tab"><span>⚙️</span>設定</button>
+    <button data-view="me" class="tab"><span>👤</span>マイページ</button>
   </nav>
 
+  <script src="exercises.js"></script>
+  <script src="figure.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

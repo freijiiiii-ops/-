@@ -1,6 +1,6 @@
 // オフラインでも使えるように、アプリのファイルをキャッシュする
-const CACHE = 'workout-app-v1';
-const FILES = ['./', 'index.html', 'style.css', 'app.js', 'manifest.json', 'icon.svg'];
+const CACHE = 'workout-app-v2';
+const FILES = ['./', 'index.html', 'style.css', 'exercises.js', 'figure.js', 'app.js', 'manifest.json', 'icon.svg'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES)).then(() => self.skipWaiting()));
